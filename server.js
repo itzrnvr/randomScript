@@ -1,4 +1,4 @@
-const {getKeys, clearAndUpdateWorkingColumn, getAuth} = require("./gSheet")
+const {getLimit, getKeys, clearAndUpdateWorkingColumn, getAuth, deleteLookupSheet} = require("./gSheet")
 const {testKeyStatus4} = require("./openHelper")
 
 const cron = require('node-cron');
@@ -30,7 +30,7 @@ app.get('/health', (req, res) => {
   res.sendStatus(200);
 })
 
-app.listen(3000, () => {
+app.listen(10000, () => {
   console.log('Server started')
 })
 
@@ -61,6 +61,15 @@ async function main(){
 
     clearAndUpdateWorkingColumn(await getAuth(), working)
 }
+
+
+// async function testLimits() {
+//     const data = await getLimit(123456789)
+//     console.log(data);
+//     await deleteLookupSheet()
+// }
+
+// testLimits()
 
 
 // cron.schedule('*/15 * * * * *', () => {

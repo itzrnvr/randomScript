@@ -3,11 +3,14 @@ const {google} = require('googleapis');
 // Fetch environment variable and convert from Base64 to JSON
 
 //const gKeys = require('./googleServiceAccount.json');
+const { retail } = require('googleapis/build/src/apis/retail');
 const gKeys = JSON.parse(Buffer.from(process.env.GOOGLE_CREDENTIALS, 'base64').toString('utf8'))
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
+
+let auth = null;
 
 async function authorize() {
   // load the service account keys
@@ -22,8 +25,126 @@ async function authorize() {
   
   // authenticate and return the client
   await client.authorize();
+  auth = client
   return client;
 }
+
+
+const deleteLookupSheet = async function() {
+  !auth && await authorize()
+  const gsapi = google.sheets({ version: 'v4', auth });
+  const targetSheetId = '12Hnf-syC5jQyvklShdc2d_Yj4MgLFggRmZsq-nDGkkc'; // replace with your google sheet ID
+
+  // first, we need to get the sheetId of the 'LOOKUP_SHEET'
+  const response = await gsapi.spreadsheets.get({
+    spreadsheetId: targetSheetId,
+  });
+
+  const sheets = response.data.sheets;
+  let lookupSheetId;
+  for (let i = 0; i < sheets.length; i++) {
+    if (sheets[i].properties.title === "LOOKUP_SHEET") {
+      lookupSheetId = sheets[i].properties.sheetId;
+      break;
+    }
+  }
+
+  if (lookupSheetId === undefined) {
+    console.log("LOOKUP_SHEET not found");
+    return;
+  }
+
+  // now we can delete the sheet
+  const requests = [{
+    deleteSheet: {
+      sheetId: lookupSheetId,
+    }
+  }];
+
+  await gsapi.spreadsheets.batchUpdate({
+    spreadsheetId: targetSheetId,
+    resource: {
+      requests
+    },
+  });
+}
+
+const createHiddenSheet = async function(auth) {
+  const gsapi = google.sheets({ version: 'v4', auth });
+  const targetSheetId = '12Hnf-syC5jQyvklShdc2d_Yj4MgLFggRmZsq-nDGkkc'; // replace with your google sheet ID
+
+  const requests = [{
+    addSheet: {
+      properties: {
+        hidden: true,
+        title: "LOOKUP_SHEET"
+      }
+    }
+  }];
+
+  await gsapi.spreadsheets.batchUpdate({
+    spreadsheetId: targetSheetId,
+    resource: {
+      requests
+    },
+  });
+}
+
+const createSearchFormula = async function(auth, token) {
+  const gsapi = google.sheets({ version: 'v4', auth });
+  const tokenToFind = token;
+  const targetSheetId = '12Hnf-syC5jQyvklShdc2d_Yj4MgLFggRmZsq-nDGkkc'; // replace with your google sheet ID
+  
+  const newValues = [[`=MATCH(\"${'a123456789'}\", access!A:A, 0)`]];
+  
+  await gsapi.spreadsheets.values.update({
+    spreadsheetId: targetSheetId,
+    range: 'LOOKUP_SHEET!A1',
+    valueInputOption: 'USER_ENTERED',
+    resource: {
+      values: newValues
+    },
+  });
+}
+
+const getMatchingRow = async function (auth) {
+  const gsapi = google.sheets({ version: 'v4', auth });
+  const targetSheetId = '12Hnf-syC5jQyvklShdc2d_Yj4MgLFggRmZsq-nDGkkc'; // replace with your google sheet ID
+
+  const resp = await gsapi.spreadsheets.values.get({
+    spreadsheetId: targetSheetId,
+    range: 'LOOKUP_SHEET!A1',
+  });
+  
+  const matchRowNum = resp.data.values ? resp.data.values[0][0] : null ;
+  
+  if (matchRowNum === null) {
+    console.log('No match found');
+    return null;
+  }
+
+  // now get the data in the matching row
+  const rowResp = await gsapi.spreadsheets.values.get({
+    spreadsheetId: targetSheetId,
+    range: `access!A${matchRowNum}:E${matchRowNum}`,
+  });
+
+  const rowData = rowResp.data.values ? rowResp.data.values[0] : null;
+  return rowData;
+}
+
+
+
+async function getLimit(token) {
+
+  !auth && await authorize()
+  await createHiddenSheet(auth);
+  await createSearchFormula(auth, token);
+  let rowNumber = await getMatchingRow(auth);
+  // console.log(`The token is at row #${rowNumber}`);
+  return rowNumber
+}
+
 
 
 async function listMajors(auth) {
@@ -103,4 +224,4 @@ async function getKeys() {
 }
 
 
-module.exports = {getAuth, getKeys, clearAndUpdateWorkingColumn}
+module.exports = {deleteLookupSheet, getAuth,  getLimit, getKeys, clearAndUpdateWorkingColumn}
