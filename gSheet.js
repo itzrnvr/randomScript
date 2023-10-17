@@ -1,7 +1,9 @@
 const {google} = require('googleapis');
 // const gKeys = require('./googleServiceAccount.json')
 // Fetch environment variable and convert from Base64 to JSON
-const gKeys = JSON.parse(Buffer.from(process.env.GOOGLE_CREDENTIALS, 'base64').toString('utf8')) || require('./googleServiceAccount.json');
+
+//const gKeys = require('./googleServiceAccount.json');
+const gKeys = JSON.parse(Buffer.from(process.env.GOOGLE_CREDENTIALS, 'base64').toString('utf8'))
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];

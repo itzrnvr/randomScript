@@ -1,6 +1,9 @@
 const {getKeys, clearAndUpdateWorkingColumn, getAuth} = require("./gSheet")
 const {testKeyStatus4} = require("./openHelper")
 
+const cron = require('node-cron');
+
+
 
 
 async function main(){
@@ -29,4 +32,8 @@ async function main(){
     clearAndUpdateWorkingColumn(await getAuth(), working)
 }
 
-main();
+
+cron.schedule('*/15 * * * * *', () => {
+  console.log('running every 15 secs');
+  main();
+});

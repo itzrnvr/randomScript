@@ -1,13 +1,15 @@
-{  "main": "server.js",
-"scripts": {
-  "start": "node server.js"
-},
+{
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "@google-cloud/local-auth": "2.1.0",
     "crypto": "^1.0.1",
     "googleapis": "105",
     "http": "^0.0.1-security",
     "md5": "^2.3.0",
+    "node-cron": "^3.0.2",
     "openai": "^4.0.0",
     "url": "^0.11.2",
     "uuid": "^9.0.0",
