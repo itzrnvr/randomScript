@@ -3,6 +3,20 @@ const {testKeyStatus4} = require("./openHelper")
 
 const cron = require('node-cron');
 
+const express = require('express')
+const cors = require('cors')
+const app = express()
+
+app.use(cors())
+app.get('/', (req, res) => res.send('Hello World!'))
+
+app.get('/health', (req, res) => res.sendStatus(200))
+
+
+app.listen(3000, () => {
+  console.log('Server started')
+})
+
 
 
 

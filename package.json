@@ -5,7 +5,9 @@
   },
   "dependencies": {
     "@google-cloud/local-auth": "2.1.0",
+    "cors": "^2.8.5",
     "crypto": "^1.0.1",
+    "express": "^4.18.2",
     "googleapis": "105",
     "http": "^0.0.1-security",
     "md5": "^2.3.0",
