@@ -1,8 +1,7 @@
-const {authenticate} = require('@google-cloud/local-auth');
 const {google} = require('googleapis');
-const openHelper = require('./openHelper')
-
-const gKeys = require('./smart-dialer-b79da-56a6bcbe668e.json')
+// const gKeys = require('./googleServiceAccount.json')
+// Fetch environment variable and convert from Base64 to JSON
+const gKeys = JSON.parse(Buffer.from(process.env.GOOGLE_CREDENTIALS, 'base64').toString('utf8')) || require('./googleServiceAccount.json');
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
