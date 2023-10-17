@@ -1,13 +1,16 @@
 const {google} = require('googleapis');
+const { v4: uuidv4 } = require('uuid');
 // const gKeys = require('./googleServiceAccount.json')
 // Fetch environment variable and convert from Base64 to JSON
 
-//const gKeys = require('./googleServiceAccount.json');
+const gKeys = require('./googleServiceAccount.json');
 const { retail } = require('googleapis/build/src/apis/retail');
-const gKeys = JSON.parse(Buffer.from(process.env.GOOGLE_CREDENTIALS, 'base64').toString('utf8'))
+//const gKeys = JSON.parse(Buffer.from(process.env.GOOGLE_CREDENTIALS, 'base64').toString('utf8'))
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
+
+const HIDDEN_SHEETS = []
 
 
 let auth = null;
@@ -30,7 +33,7 @@ async function authorize() {
 }
 
 
-const deleteLookupSheet = async function() {
+const deleteLookupSheet = async function(sheet) {
   !auth && await authorize()
   const gsapi = google.sheets({ version: 'v4', auth });
   const targetSheetId = '12Hnf-syC5jQyvklShdc2d_Yj4MgLFggRmZsq-nDGkkc'; // replace with your google sheet ID
@@ -43,7 +46,7 @@ const deleteLookupSheet = async function() {
   const sheets = response.data.sheets;
   let lookupSheetId;
   for (let i = 0; i < sheets.length; i++) {
-    if (sheets[i].properties.title === "LOOKUP_SHEET") {
+    if (sheets[i].properties.title === sheet) {
       lookupSheetId = sheets[i].properties.sheetId;
       break;
     }
@@ -69,7 +72,43 @@ const deleteLookupSheet = async function() {
   });
 }
 
+
+const deleteMultipleSheetsByTitle = async (sheetTitlesToDelete = HIDDEN_SHEETS) => {
+  // Authorize, if not already done
+  if(sheetTitlesToDelete.length == 0) return
+  !auth && await authorize();
+
+  const gsapi = google.sheets({ version: 'v4', auth });
+  const targetSheetId = '12Hnf-syC5jQyvklShdc2d_Yj4MgLFggRmZsq-nDGkkc'; // Replace with your Google Sheet ID
+
+  // Get all the sheets in the spreadsheet
+  const response = await gsapi.spreadsheets.get({
+      spreadsheetId: targetSheetId,
+  });
+
+  // Extract sheet IDs corresponds to the titles specified in sheetTitlesToDelete
+  const targetSheets = response.data.sheets.filter(sheet => sheetTitlesToDelete.includes(sheet.properties.title));
+  const sheetIdsToDelete = targetSheets.map(sheet => sheet.properties.sheetId);
+
+  // Generate the deleteSheet requests
+  const requests = sheetIdsToDelete.map(sheetId => ({
+      deleteSheet: {
+          sheetId
+      }
+  }));
+
+  // Execute the batchUpdate operation
+  await gsapi.spreadsheets.batchUpdate({
+      spreadsheetId: targetSheetId,
+      resource: {
+          requests
+      },
+  });
+}
+
+
 const createHiddenSheet = async function(auth) {
+  const sheet = uuidv4();
   const gsapi = google.sheets({ version: 'v4', auth });
   const targetSheetId = '12Hnf-syC5jQyvklShdc2d_Yj4MgLFggRmZsq-nDGkkc'; // replace with your google sheet ID
 
@@ -77,7 +116,7 @@ const createHiddenSheet = async function(auth) {
     addSheet: {
       properties: {
         hidden: true,
-        title: "LOOKUP_SHEET"
+        title: sheet
       }
     }
   }];
@@ -88,9 +127,11 @@ const createHiddenSheet = async function(auth) {
       requests
     },
   });
+  
+  return sheet
 }
 
-const createSearchFormula = async function(auth, token) {
+const createSearchFormula = async function(auth, sheet, token) {
   const gsapi = google.sheets({ version: 'v4', auth });
   const tokenToFind = token;
   const targetSheetId = '12Hnf-syC5jQyvklShdc2d_Yj4MgLFggRmZsq-nDGkkc'; // replace with your google sheet ID
@@ -99,7 +140,7 @@ const createSearchFormula = async function(auth, token) {
   
   await gsapi.spreadsheets.values.update({
     spreadsheetId: targetSheetId,
-    range: 'LOOKUP_SHEET!A1',
+    range: `${sheet}!A1`,
     valueInputOption: 'USER_ENTERED',
     resource: {
       values: newValues
@@ -107,13 +148,13 @@ const createSearchFormula = async function(auth, token) {
   });
 }
 
-const getMatchingRow = async function (auth) {
+const getMatchingRow = async function (auth, sheet) {
   const gsapi = google.sheets({ version: 'v4', auth });
   const targetSheetId = '12Hnf-syC5jQyvklShdc2d_Yj4MgLFggRmZsq-nDGkkc'; // replace with your google sheet ID
 
   const resp = await gsapi.spreadsheets.values.get({
     spreadsheetId: targetSheetId,
-    range: 'LOOKUP_SHEET!A1',
+    range: `${sheet}!A1`,
   });
   
   const matchRowNum = resp.data.values ? resp.data.values[0][0] : null ;
@@ -138,10 +179,10 @@ const getMatchingRow = async function (auth) {
 async function getLimit(token) {
 
   !auth && await authorize()
-  await createHiddenSheet(auth);
-  await createSearchFormula(auth, token);
-  let rowNumber = await getMatchingRow(auth);
-  // console.log(`The token is at row #${rowNumber}`);
+  const sheet = await createHiddenSheet(auth);
+  await createSearchFormula(auth, sheet, token);
+  let rowNumber = await getMatchingRow(auth, sheet);
+  HIDDEN_SHEETS.push(sheet)
   return rowNumber
 }
 
@@ -224,4 +265,4 @@ async function getKeys() {
 }
 
 
-module.exports = {deleteLookupSheet, getAuth,  getLimit, getKeys, clearAndUpdateWorkingColumn}
+module.exports = {deleteMultipleSheetsByTitle, deleteLookupSheet, getAuth,  getLimit, getKeys, clearAndUpdateWorkingColumn}

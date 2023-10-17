@@ -1,14 +1,20 @@
-const {getLimit, getKeys, clearAndUpdateWorkingColumn, getAuth, deleteLookupSheet} = require("./gSheet")
+const {deleteMultipleSheetsByTitle, getLimit, getKeys, clearAndUpdateWorkingColumn, getAuth, deleteLookupSheet} = require("./gSheet")
 const {testKeyStatus4} = require("./openHelper")
 
 const cron = require('node-cron');
 const express = require('express')
 const cors = require('cors')
 const app = express()
+const bodyParser = require('body-parser');
+const { getChat } = require("./providers/nova/chat");
 let cronJobStarted = false; // Flag to control cron job start
 
 // CORS middleware
 app.use(cors())
+
+// Add BodyParser middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => res.send('Hello World!'))
 
@@ -30,7 +36,11 @@ app.get('/health', (req, res) => {
   res.sendStatus(200);
 })
 
-app.listen(10000, () => {
+app.post('/api/v1/chat/completions', (req, res) => {
+  getChat(req, res)
+})
+
+app.listen(8000, () => {
   console.log('Server started')
 })
 
@@ -63,16 +73,35 @@ async function main(){
 }
 
 
-// async function testLimits() {
-//     const data = await getLimit(123456789)
-//     console.log(data);
-//     await deleteLookupSheet()
-// }
-
-// testLimits()
+async function testLimits() {
+    const data = await getLimit(123456789)
+    console.log(data.rowNumber);
+}
 
 
-// cron.schedule('*/15 * * * * *', () => {
-//   console.log('running every 15 secs');
-//   main();
-// });
+// async function parallelCalls() {
+//     let promises = [];
+  
+//     for (let i = 0; i < 10; i++) {
+//       promises.push(testLimits()); // push the promise returned by testLimits into the array
+//     }
+  
+//     try {
+//       await Promise.all(promises); // wait for all promises to resolve
+//       console.log('All parallel calls completed successfully');
+//     } catch (error) {
+//       console.error('Error occurred in one of the parallel calls', error);
+//     }
+//     console.timeEnd('parallelCalls');
+//   }
+//   console.time('parallelCalls');
+//   parallelCalls();
+
+//   setInterval(async () => {
+//     console.time('deleteMultipleSheetsByTitle')
+//     deleteMultipleSheetsByTitle()
+//     .then(() => {
+//         console.timeEnd('deleteMultipleSheetsByTitle')
+//     })
+//       .catch(err => console.error(err));
+//   }, 5000); // time in milliseconds
