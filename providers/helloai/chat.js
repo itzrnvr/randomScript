@@ -83,7 +83,7 @@ async function getStreamChat(req, res) {
             //console.log(JSON.stringify(transformedData));
 
             console.log(JSON.stringify(transformedData))
-            res.write(JSON.stringify(transformedData) + "\n\n" );
+            res.write("data: " + JSON.stringify(transformedData) + "\n\n" );
         })
 
         response.data.on('error', (err) => {
