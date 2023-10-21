@@ -7,7 +7,6 @@ const cors = require('cors')
 const app = express()
 const bodyParser = require('body-parser');
 const { getChat } = require("./providers/nova/chat");
-const { getAiChat } = require("./providers/aichat/chat");
 const { getHelloChat } = require("./providers/helloai/chat");
 let cronJobStarted = false; // Flag to control cron job start
 

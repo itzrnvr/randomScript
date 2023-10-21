@@ -30,20 +30,20 @@ const instance = axios.create({
     }
 });
 
-const data = {
-    'model': 'gpt-4',
-    'messages': [
-        {
-            'content': 'You are a helpful assistant.',
-            'role': 'system'
-        },
-        {
-            'content': 'gg',
-            'role': 'user'
-        }
-    ],
-    'simplified': false
-};
+// const data = {
+//     'model': 'gpt-4',
+//     'messages': [
+//         {
+//             'content': 'You are a helpful assistant.',
+//             'role': 'system'
+//         },
+//         {
+//             'content': 'gg',
+//             'role': 'user'
+//         }
+//     ],
+//     'simplified': false
+// };
 
 async function getStreamChat(req, res) {
     const startTime = performance.now();
@@ -82,7 +82,8 @@ async function getStreamChat(req, res) {
             };
             //console.log(JSON.stringify(transformedData));
 
-            res.write(JSON.stringify(transformedData));
+            console.log(JSON.stringify(transformedData))
+            res.write(JSON.stringify(transformedData) + "\n\n" );
         })
 
         response.data.on('error', (err) => {
@@ -93,7 +94,8 @@ async function getStreamChat(req, res) {
         response.data.on('end', () => {
             const endTime = performance.now();
             //console.log(`Received and processed stream in ${endTime - startTime} milliseconds`);
-    
+            res.write(`{"id":"chatcmpl-8C0vUx3ssrpN6aHLDJH06phVtShPh","object":"chat.completion.chunk","created":1697874188,"model":"gpt-3.5-turbo-0613","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}`)
+            res.write('[DONE]')
             res.end();
         });
     })
