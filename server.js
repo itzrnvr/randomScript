@@ -7,6 +7,8 @@ const cors = require('cors')
 const app = express()
 const bodyParser = require('body-parser');
 const { getChat } = require("./providers/nova/chat");
+const { getAiChat } = require("./providers/aichat/chat");
+const { getHelloChat } = require("./providers/helloai/chat");
 let cronJobStarted = false; // Flag to control cron job start
 
 // CORS middleware
@@ -38,6 +40,10 @@ app.get('/health', (req, res) => {
 
 app.post('/api/v1/chat/completions', (req, res) => {
   getChat(req, res)
+})
+
+app.post('/api/v2/chat/completions', (req, res) => {
+  getHelloChat(req, res)
 })
 
 app.listen(8000, () => {
