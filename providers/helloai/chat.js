@@ -84,6 +84,12 @@ async function getStreamChat(req, res) {
 
             res.write(JSON.stringify(transformedData));
         })
+
+        response.data.on('error', (err) => {
+            console.log('Error:', err);
+            res.status(500).send(err);
+        });
+
         response.data.on('end', () => {
             const endTime = performance.now();
             console.log(`Received and processed stream in ${endTime - startTime} milliseconds`);
