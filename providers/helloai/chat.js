@@ -92,7 +92,7 @@ async function getStreamChat(req, res) {
 
         response.data.on('end', () => {
             const endTime = performance.now();
-            console.log(`Received and processed stream in ${endTime - startTime} milliseconds`);
+            //console.log(`Received and processed stream in ${endTime - startTime} milliseconds`);
     
             res.end();
         });
