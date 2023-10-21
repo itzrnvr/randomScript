@@ -52,7 +52,7 @@ async function getStreamChat(req, res) {
     instance({
         method: 'post',
         url: '/openai/stream-chat',
-        data,
+        data: req.body,
         headers: { 'Authorization': `Bearer ${accessToken}`},
         responseType: 'stream'
     })
