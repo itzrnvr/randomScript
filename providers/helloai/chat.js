@@ -1,23 +1,34 @@
-const {generateToken} = require('./tokenGen')
+const { generateToken } = require('./tokenGen');
 const { performance } = require('perf_hooks');
 const axios = require('axios');
+const axiosRetry = require('axios-retry');
+const SSEChannel = require('sse-channel');
+const events = require('events');
+const { Transform } = require('stream');
 
+
+
+
+// Cached token information.
 let cachedToken = {
     value: null,
     generatedTime: null
 };
 
+// Improved token management function.
 async function getCachedToken() {
+
     const currentTime = new Date();
-    
-    if (cachedToken.value === null || (currentTime - cachedToken.generatedTime > 3500 * 1000)) {
+
+    if (cachedToken.value === null || ((currentTime - cachedToken.generatedTime) > 3500 * 1000)) {
         cachedToken.value = await generateToken();
         cachedToken.generatedTime = currentTime;
     }
-    
+
     return cachedToken.value;
 }
 
+// Axios Instance.
 const instance = axios.create({
     baseURL: 'https://helloaiffs-zkz2omyuxq-uc.a.run.app',
     headers: {
@@ -26,43 +37,23 @@ const instance = axios.create({
         'Connection': 'keep-alive',
         'Accept': '*/*',
         'Accept-Language': 'en-IN,en-GB;q=0.9,en;q=0.8',
-        'Content-Type': 'application/json'
-    }
+        'Content-Type': 'application/json',
+        'accept-encoding': 'gzip, deflate'
+    },
+    timeout: 30000,
+    responseType: 'stream'
 });
 
-// const data = {
-//     'model': 'gpt-4',
-//     'messages': [
-//         {
-//             'content': 'You are a helpful assistant.',
-//             'role': 'system'
-//         },
-//         {
-//             'content': 'gg',
-//             'role': 'user'
-//         }
-//     ],
-//     'simplified': false
-// };
+axiosRetry(instance, { retries: 3 }); // This will retry any request that fails.
 
+// Stream Chat function.
 async function getStreamChat(req, res) {
     const startTime = performance.now();
     const accessToken = await getCachedToken();
 
-    instance({
-        method: 'post',
-        url: '/openai/stream-chat',
-        data: req.body,
-        headers: { 'Authorization': `Bearer ${accessToken}`},
-        responseType: 'stream'
-    })
-    .then(function (response) {
-        res.setHeader('Content-Type', 'text/event-stream'); // set the correct content type
-        res.setHeader('Cache-Control', 'no-cache'); // recommend not to cache this response
-        res.flushHeaders(); // flush the headers to ensure they are sent 
-
-        response.data.on('data', function(chunk) {
-
+    // Create a Transform stream
+    const transformStream = new Transform({
+        transform(chunk, encoding, callback) {
             const originalData = chunk.toString();
             const transformedData = {
                 id: 'chatcmpl-8C0vUx3ssrpN6aHLDJH06phVtShPh',
@@ -78,32 +69,76 @@ async function getStreamChat(req, res) {
                         },
                         finish_reason: null
                     }
-                ]
+                ],
             };
-            //console.log(JSON.stringify(transformedData));
-
-            console.log(JSON.stringify(transformedData))
-            res.write("data: " + JSON.stringify(transformedData) + "\n\n" );
-        })
-
-        response.data.on('error', (err) => {
-            console.log('Error:', err);
-            res.status(500).send(err);
-        });
-
-        response.data.on('end', () => {
-            const endTime = performance.now();
-            //console.log(`Received and processed stream in ${endTime - startTime} milliseconds`);
-            res.write(`{"id":"chatcmpl-8C0vUx3ssrpN6aHLDJH06phVtShPh","object":"chat.completion.chunk","created":1697874188,"model":"gpt-3.5-turbo-0613","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}`)
-            res.write('[DONE]')
-            res.end();
-        });
-    })
-    .catch(function (error) {
-        console.log('An error occurred while sending the request:', error);
+    
+            this.push("data: " + JSON.stringify(transformedData) + "\r\n\n");
+            callback();
+        }
     });
+
+    instance({
+        method: 'post',
+        url: '/openai/stream-chat',
+        data: req.body,
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+    })
+        .then(function (response) {
+            res.setHeader('Content-Type', 'text/event-stream');
+            res.setHeader('Cache-Control', 'no-cache');
+            res.setHeader('Connection', 'keep-alive');
+            res.flushHeaders();
+            // response.data.on('data', (chunk) => {
+            //     const originalData = chunk.toString();
+            //     const transformedData = {
+            //         id: 'chatcmpl-8C0vUx3ssrpN6aHLDJH06phVtShPh',
+            //         object: "chat.completion.chunk",
+            //         created: Date.now() / 1000 | 0, // Current Unix timestamp
+            //         model: "gpt-4",
+            //         choices: [
+            //             {
+            //                 index: 0,
+            //                 delta: {
+            //                     role: 'assistant',
+            //                     content: originalData
+            //                 },
+            //                 finish_reason: null
+            //             }
+            //         ],
+            //     };
+
+            //     try {
+            //         const dataString = JSON.stringify(transformedData);
+    
+            //         console.log(dataString);
+            //         res.write("data: " + JSON.stringify(transformedData) + "\r\n\n");
+
+    
+            //     } catch (error) {
+            //         console.error('Failed to write response:', error);
+            //     }
+            // });
+
+            // Pipe the response data into the Transform stream
+            response.data.pipe(transformStream).pipe(res);
+
+            response.data.on('error', (err) => {
+                console.error('Error:', err);
+                res.status(500).send(err);
+            });
+
+            response.data.on('end', () => {
+                const endTime = performance.now();
+                res.write(`[DONE]`);
+                res.end();
+            });
+        })
+        .catch((error) => {
+            console.error('Error occurred while sending request:', error);
+        });
 }
 
+// Regular Chat function.
 async function getChat(req, res) {
     const accessToken = await getCachedToken();
     const headers = {
@@ -146,12 +181,9 @@ async function getChat(req, res) {
       });
 }
 
+// Hello Chat function.
 async function getHelloChat(req, res) {
-    req.body.stream ? getStreamChat(req, res) : getChat(req, res)
+    req.body.stream ? getStreamChat(req, res) : getChat(req, res);
 }
 
-
-
-
-module.exports = {getHelloChat}
-
+module.exports = { getHelloChat };

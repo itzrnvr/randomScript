@@ -6,6 +6,7 @@
   "dependencies": {
     "@google-cloud/local-auth": "2.1.0",
     "axios": "^1.5.1",
+    "axios-retry": "^3.8.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "crypto-random-string": "^5.0.0",
@@ -15,6 +16,7 @@
     "md5": "^2.3.0",
     "node-cron": "^3.0.2",
     "openai": "^4.0.0",
+    "sse-channel": "^4.0.0",
     "url": "^0.11.2",
     "uuid": "^9.0.1",
     "ws": "^8.14.1"
