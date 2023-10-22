@@ -88,37 +88,7 @@ async function getStreamChat(req, res) {
             res.setHeader('Cache-Control', 'no-cache');
             res.setHeader('Connection', 'keep-alive');
             res.flushHeaders();
-            // response.data.on('data', (chunk) => {
-            //     const originalData = chunk.toString();
-            //     const transformedData = {
-            //         id: 'chatcmpl-8C0vUx3ssrpN6aHLDJH06phVtShPh',
-            //         object: "chat.completion.chunk",
-            //         created: Date.now() / 1000 | 0, // Current Unix timestamp
-            //         model: "gpt-4",
-            //         choices: [
-            //             {
-            //                 index: 0,
-            //                 delta: {
-            //                     role: 'assistant',
-            //                     content: originalData
-            //                 },
-            //                 finish_reason: null
-            //             }
-            //         ],
-            //     };
-
-            //     try {
-            //         const dataString = JSON.stringify(transformedData);
-    
-            //         console.log(dataString);
-            //         res.write("data: " + JSON.stringify(transformedData) + "\r\n\n");
-
-    
-            //     } catch (error) {
-            //         console.error('Failed to write response:', error);
-            //     }
-            // });
-
+       
             // Pipe the response data into the Transform stream
             response.data.pipe(transformStream).pipe(res);
 
