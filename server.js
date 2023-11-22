@@ -8,6 +8,7 @@ const app = express()
 const bodyParser = require('body-parser');
 const { getChat } = require("./providers/nova/chat");
 const { getHelloChat } = require("./providers/helloai/chat");
+const { getStreamChatOpenX } = require("./providers/openx/chat");
 
 
 let cronJobStarted = false; // Flag to control cron job start
@@ -15,9 +16,9 @@ let cronJobStarted = false; // Flag to control cron job start
 // CORS middleware
 app.use(cors())
 
-// Add BodyParser middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// BodyParser middleware
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
 app.get('/', (req, res) => res.send('Hello World!'))
 
@@ -45,6 +46,10 @@ app.post('/api/v1/chat/completions', (req, res) => {
 
 app.post('/api/v2/chat/completions', (req, res) => {
   getHelloChat(req, res)
+})
+
+app.post('/api/v3/chat/completions', (req, res) => {
+  getStreamChatOpenX(req, res)
 })
 
 app.listen(8000, () => {

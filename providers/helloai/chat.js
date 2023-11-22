@@ -2,8 +2,6 @@ const { generateToken } = require('./tokenGen');
 const { performance } = require('perf_hooks');
 const axios = require('axios');
 const axiosRetry = require('axios-retry');
-const SSEChannel = require('sse-channel');
-const events = require('events');
 const { Transform } = require('stream');
 
 
@@ -55,6 +53,7 @@ async function getStreamChat(req, res) {
     const transformStream = new Transform({
         transform(chunk, encoding, callback) {
             const originalData = chunk.toString();
+            console.log(originalData)
             const transformedData = {
                 id: 'chatcmpl-8C0vUx3ssrpN6aHLDJH06phVtShPh',
                 object: "chat.completion.chunk",
@@ -71,6 +70,8 @@ async function getStreamChat(req, res) {
                     }
                 ],
             };
+
+            console.log(transformedData)
     
             this.push("data: " + JSON.stringify(transformedData) + "\r\n\n");
             callback();
@@ -99,6 +100,7 @@ async function getStreamChat(req, res) {
 
             response.data.on('end', () => {
                 const endTime = performance.now();
+                console.log('end')
                 res.write(`[DONE]`);
                 res.end();
             });
@@ -143,7 +145,7 @@ async function getChat(req, res) {
                 }
             ]
         }
-
+        console.log(chatCompletion)
         res.send(chatCompletion)
       })
       .catch((error) => {
@@ -156,4 +158,4 @@ async function getHelloChat(req, res) {
     req.body.stream ? getStreamChat(req, res) : getChat(req, res);
 }
 
-module.exports = { getHelloChat };
+module.exports = { getHelloChat, getChat };

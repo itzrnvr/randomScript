@@ -1,0 +1,18 @@
+Server started
+Generated token in 1292.2211250066757 milliseconds
+{
+  message: 'Response generated',
+  errors: null,
+  isSuccess: true,
+  data: '"Intercepting URL Addresses in Chrome with Node.js Script"',
+  combinedErrors: 'Response generated'
+}
+{
+  message: 'Response generated',
+  errors: null,
+  isSuccess: true,
+  data: '"Restrictions and Changes in Chrome Manifest V3"',
+  combinedErrors: 'Response generated'
+}
+Server started
+Generated token in 1320.8042500019073 milliseconds
