@@ -9,6 +9,7 @@ const bodyParser = require('body-parser');
 const { getChat } = require("./providers/nova/chat");
 const { getHelloChat } = require("./providers/helloai/chat");
 const { getStreamChatOpenX } = require("./providers/openx/chat");
+const { getStreamChatVulcan } = require("./providers/vulcanlabs/chat");
 
 
 let cronJobStarted = false; // Flag to control cron job start
@@ -51,6 +52,11 @@ app.post('/api/v2/chat/completions', (req, res) => {
 app.post('/api/v3/chat/completions', (req, res) => {
   getStreamChatOpenX(req, res)
 })
+
+app.post('/api/v4/chat/completions', (req, res) => {
+  getStreamChatVulcan(req, res)
+})
+
 
 app.listen(8000, () => {
   console.log('Server started')
