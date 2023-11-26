@@ -5,6 +5,7 @@
   },
   "dependencies": {
     "@google-cloud/local-auth": "2.1.0",
+    "aws-sdk": "^2.1502.0",
     "axios": "^1.5.1",
     "axios-retry": "^3.8.0",
     "cors": "^2.8.5",

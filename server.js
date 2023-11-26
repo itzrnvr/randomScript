@@ -10,6 +10,8 @@ const { getChat } = require("./providers/nova/chat");
 const { getHelloChat } = require("./providers/helloai/chat");
 const { getStreamChatOpenX } = require("./providers/openx/chat");
 const { getStreamChatVulcan } = require("./providers/vulcanlabs/chat");
+const { getStreamChatAiChat2 } = require("./providers/ai_chatbot2/chat");
+const { getStreamChatAiAssist } = require("./providers/assist/chat");
 
 
 let cronJobStarted = false; // Flag to control cron job start
@@ -56,6 +58,15 @@ app.post('/api/v3/chat/completions', (req, res) => {
 app.post('/api/v4/chat/completions', (req, res) => {
   getStreamChatVulcan(req, res)
 })
+
+app.post('/api/v5/chat/completions', (req, res) => {
+  getStreamChatAiChat2(req, res)
+})
+
+app.post('/api/v6/chat/completions', (req, res) => {
+  getStreamChatAiAssist(req, res)
+})
+
 
 
 app.listen(8000, () => {

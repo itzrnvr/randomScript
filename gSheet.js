@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 // const gKeys = require('./googleServiceAccount.json')
 // Fetch environment variable and convert from Base64 to JSON
 
-// const gKeys = require('./googleServiceAccount.json');
+//const gKeys = require('./googleServiceAccount.json');
 const { retail } = require('googleapis/build/src/apis/retail');
 const gKeys = JSON.parse(Buffer.from(process.env.GOOGLE_CREDENTIALS, 'base64').toString('utf8'))
 
