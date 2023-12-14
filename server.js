@@ -13,6 +13,7 @@ const { getStreamChatVulcan } = require("./providers/vulcanlabs/chat");
 const { getStreamChatAiChat2 } = require("./providers/ai_chatbot2/chat");
 const { getStreamChatAiAssist } = require("./providers/assist/chat");
 const { getStreamChatChatz } = require("./providers/chatzi/chat");
+const { getStreamChatSumit } = require("./providers/sumit/chat");
 
 
 let cronJobStarted = false; // Flag to control cron job start
@@ -70,8 +71,10 @@ app.post('/api/v6/chat/completions', (req, res) => {
 
 
 app.post('/api/v7/chat/completions', (req, res) => {
-  getStreamChatChatz(req, res)
+  getStreamChatSumit(req, res)
 })
+
+
 
 
 
