@@ -3,15 +3,13 @@ const axiosRetry = require('axios-retry'); // Install with npm install axios-ret
 const uuid = require('uuid');
 
 const instance = axios.create({
-    baseURL: 'http://69.164.203.200:3000/v1',
+    baseURL: 'https://us-central1-need-ai-app.cloudfunctions.net',
     headers: {
-        'Host': '69.164.203.200:3000',
+        'Host': 'us-central1-need-ai-app.cloudfunctions.net',
         'Accept': '*/*',
-        'User-Agent': 'Chatzi/68 CFNetwork/1485 Darwin/23.1.0',
+        'User-Agent': 'Need%20AI/0 CFNetwork/1485 Darwin/23.1.0',
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer',
         'Connection': 'keep-alive',
-        'Accept-Language': 'en-IN,en-GB;q=0.9,en;q=0.8'
     }
 });
 
@@ -20,7 +18,7 @@ axiosRetry(instance, { retries: 3 });  //Set the number of retries to 3
 async function getStreamChat(req, res) {
     instance({
         method: 'post',
-        url: '/chat/completions',
+        url: '/openAIProxy',
         data: req.body,
         responseType: 'stream'
     })
@@ -47,8 +45,8 @@ async function getStreamChat(req, res) {
     });
 }
 
-async function getStreamChatChatz(req, res) {
+async function getStreamChatNeedAI(req, res) {
     getStreamChat(req, res);
 }
 
-module.exports = { getStreamChatChatz };
+module.exports = { getStreamChatNeedAI };

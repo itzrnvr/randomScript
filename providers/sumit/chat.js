@@ -9,7 +9,7 @@ const instance = axios.create({
         'Accept': '*/*',
         'User-Agent': 'chatgptApp/1 CFNetwork/1485 Darwin/23.1.0',
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer sumit123',
+        'Authorization': 'Bearer sk-cfwHuJcWk8ttpPcCn72Nd8bvKh2kxtcGpylYbx0pKoXBSKtc',
         'Connection': 'keep-alive',
         'Accept-Language': 'en-IN,en-GB;q=0.9,en;q=0.8'
     }

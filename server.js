@@ -12,8 +12,9 @@ const { getStreamChatOpenX } = require("./providers/openx/chat");
 const { getStreamChatVulcan } = require("./providers/vulcanlabs/chat");
 const { getStreamChatAiChat2 } = require("./providers/ai_chatbot2/chat");
 const { getStreamChatAiAssist } = require("./providers/assist/chat");
-const { getStreamChatChatz } = require("./providers/chatzi/chat");
+const { getStreamChatChatz, getStreamChatSpeakMate } = require("./providers/speakmate/chat");
 const { getStreamChatSumit } = require("./providers/sumit/chat");
+const { getStreamChatNeedAI } = require("./providers/needai/chat");
 
 
 let cronJobStarted = false; // Flag to control cron job start
@@ -33,8 +34,8 @@ app.get('/health', (req, res) => {
   
   // Check if cron job has started
   if (!cronJobStarted) {
-    cron.schedule('*/15 * * * * *', () => {
-      console.log('running every 15 secs');
+    cron.schedule('* * * * *', () => {
+      console.log('running every 60 seconds');
       main();
     });
     console.log('Cron job scheduled');
@@ -69,9 +70,12 @@ app.post('/api/v6/chat/completions', (req, res) => {
   getStreamChatAiAssist(req, res)
 })
 
-
 app.post('/api/v7/chat/completions', (req, res) => {
   getStreamChatSumit(req, res)
+})
+
+app.post('/api/v8/chat/completions', (req, res) => {
+  getStreamChatSpeakMate(req, res)
 })
 
 
