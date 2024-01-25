@@ -15,6 +15,7 @@ const { getStreamChatAiAssist } = require("./providers/assist/chat");
 const { getStreamChatChatz, getStreamChatSpeakMate } = require("./providers/speakmate/chat");
 const { getStreamChatSumit } = require("./providers/sumit/chat");
 const { getStreamChatNeedAI } = require("./providers/needai/chat");
+const { authenticateToken } = require("./middleWare/authTokenMiddleWare");
 
 
 let cronJobStarted = false; // Flag to control cron job start
@@ -23,30 +24,31 @@ let cronJobStarted = false; // Flag to control cron job start
 app.use(cors())
 
 // BodyParser middleware
+app.use('/api', authenticateToken);
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
 app.get('/', (req, res) => res.send('Hello World!'))
 
-// On request to /health
-app.get('/health', (req, res) => {
-  console.log('Received request on /health')
+// // On request to /health
+// app.get('/health', (req, res) => {
+//   console.log('Received request on /health')
   
-  // Check if cron job has started
-  if (!cronJobStarted) {
-    cron.schedule('* * * * *', () => {
-      console.log('running every 60 seconds');
-      main();
-    });
-    console.log('Cron job scheduled');
-    cronJobStarted = true;
-  }
+//   // Check if cron job has started
+//   if (!cronJobStarted) {
+//     cron.schedule('* * * * *', () => {
+//       console.log('running every 60 seconds');
+//       main();
+//     });
+//     console.log('Cron job scheduled');
+//     cronJobStarted = true;
+//   }
 
-  // Send response
-  res.sendStatus(200);
-})
+//   // Send response
+//   res.sendStatus(200);
+// })
 
-app.post('/api/v1/chat/completions', (req, res) => {
+app.post('/api/v1/chat/completions', authenticateToken,  (req, res) => {
   getChat(req, res)
 })
 
