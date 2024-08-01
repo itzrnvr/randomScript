@@ -1,7 +1,3 @@
-const {deleteMultipleSheetsByTitle, getLimit, getKeys, clearAndUpdateWorkingColumn, getAuth, deleteLookupSheet} = require("./gSheet")
-const {testKeyStatus4} = require("./openHelper")
-
-const cron = require('node-cron');
 const express = require('express')
 const cors = require('cors')
 const app = express()
@@ -30,23 +26,12 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
 app.get('/', (req, res) => res.send('Hello World!'))
 
-// // On request to /health
-// app.get('/health', (req, res) => {
-//   console.log('Received request on /health')
-  
-//   // Check if cron job has started
-//   if (!cronJobStarted) {
-//     cron.schedule('* * * * *', () => {
-//       console.log('running every 60 seconds');
-//       main();
-//     });
-//     console.log('Cron job scheduled');
-//     cronJobStarted = true;
-//   }
-
-//   // Send response
-//   res.sendStatus(200);
-// })
+// On request to /health
+app.get('/health', (req, res) => {
+  console.log('Received request on /health')
+  // Send response
+  res.sendStatus(200);
+})
 
 app.post('/api/v1/chat/completions', authenticateToken,  (req, res) => {
   getChat(req, res)
@@ -88,64 +73,3 @@ app.listen(8000, () => {
   console.log('Server started')
 })
 
-
-
-async function main(){
-
-    const keys = await getKeys();
-
-    const testPromises = keys.map(async (key) => {
-        try {
-            await testKeyStatus4(key);
-            return { key, status: 'working' };
-        } catch (error) {
-            console.error(error);
-            return { key, status: 'notWorking' };
-        }
-    });
-
-    const results = await Promise.all(testPromises);
-
-    const working = results.filter(result => result.status === 'working').map(result => result.key);
-    const notWorking = results.filter(result => result.status === 'notWorking').map(result => result.key);
-
-    console.log("working", working);
-    console.log("working", working.length);
-    console.log("notWorking", notWorking);
-
-    clearAndUpdateWorkingColumn(await getAuth(), working)
-}
-
-
-async function testLimits() {
-    const data = await getLimit(123456789)
-    console.log(data.rowNumber);
-}
-
-
-// async function parallelCalls() {
-//     let promises = [];
-  
-//     for (let i = 0; i < 10; i++) {
-//       promises.push(testLimits()); // push the promise returned by testLimits into the array
-//     }
-  
-//     try {
-//       await Promise.all(promises); // wait for all promises to resolve
-//       console.log('All parallel calls completed successfully');
-//     } catch (error) {
-//       console.error('Error occurred in one of the parallel calls', error);
-//     }
-//     console.timeEnd('parallelCalls');
-//   }
-//   console.time('parallelCalls');
-//   parallelCalls();
-
-//   setInterval(async () => {
-//     console.time('deleteMultipleSheetsByTitle')
-//     deleteMultipleSheetsByTitle()
-//     .then(() => {
-//         console.timeEnd('deleteMultipleSheetsByTitle')
-//     })
-//       .catch(err => console.error(err));
-//   }, 5000); // time in milliseconds
