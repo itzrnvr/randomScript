@@ -1,6 +1,8 @@
 const express = require('express')
+const http = require('http');
+const socketIo = require('socket.io');
+
 const cors = require('cors')
-const app = express()
 const bodyParser = require('body-parser');
 const { getChat } = require("./providers/nova/chat");
 const { getHelloChat } = require("./providers/helloai/chat");
@@ -14,27 +16,47 @@ const { getStreamChatNeedAI } = require("./providers/needai/chat");
 const { authenticateToken } = require("./middleWare/authTokenMiddleWare");
 
 
-let cronJobStarted = false; // Flag to control cron job start
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
+const MAX_LOG_ENTRIES = 1000; // Adjust the limit as needed
+let logs = []; // Array to store logs
 
 // CORS middleware
 app.use(cors())
 
-// Middleware to log client data for all requests
 app.use((req, res, next) => {
-  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || null; 
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || null;
   const userAgent = req.headers['user-agent'];
-  console.log(`[${new Date().toISOString()}] Request from IP: ${clientIp}, User-Agent: ${userAgent}`);
+  const logEntry = `[${new Date().toISOString()}] Request from IP: ${clientIp}, User-Agent: ${userAgent}`;
+
+  console.log(logEntry);
+
+  // Store the log entry in the logs array
+  logs.push(logEntry);
+
+  // Ensure the logs array does not exceed the maximum number of entries
+  if (logs.length > MAX_LOG_ENTRIES) {
+    logs.shift(); // Remove the oldest log entry
+  }
+
+  // Emit the log entry to all connected clients
+  io.emit('log', logEntry);
+
   next();
 });
-
 // BodyParser middleware
 app.use('/api', authenticateToken);
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+// Serve static files (like CSS, JS if needed)
+app.use(express.static(__dirname + '/public'));
 
-app.get('/', (req, res) => res.send('Hello World!'))
-
-
+// Serve the main page
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
 
 // On request to /health
 app.get('/health', (req, res) => {
@@ -75,11 +97,18 @@ app.post('/api/v8/chat/completions', (req, res) => {
   getStreamChatSpeakMate(req, res)
 })
 
+// Setup Socket.IO connection handler
+io.on('connection', (socket) => {
+  console.log('a user connected');
 
+  // Send existing logs to the newly connected client
+  logs.forEach(log => socket.emit('log', log));
 
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+});
 
-
-app.listen(8080, () => {
-  console.log('Server started')
-})
-
+server.listen(3000, () => {
+  console.log('Server is listening on port 3000');
+});
