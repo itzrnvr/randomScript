@@ -19,12 +19,22 @@ let cronJobStarted = false; // Flag to control cron job start
 // CORS middleware
 app.use(cors())
 
+// Middleware to log client data for all requests
+app.use((req, res, next) => {
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || null; 
+  const userAgent = req.headers['user-agent'];
+  console.log(`[${new Date().toISOString()}] Request from IP: ${clientIp}, User-Agent: ${userAgent}`);
+  next();
+});
+
 // BodyParser middleware
 app.use('/api', authenticateToken);
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
 app.get('/', (req, res) => res.send('Hello World!'))
+
+
 
 // On request to /health
 app.get('/health', (req, res) => {
