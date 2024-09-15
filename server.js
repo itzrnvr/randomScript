@@ -16,7 +16,7 @@ const { getStreamChatNeedAI } = require("./providers/needai/chat");
 const { authenticateToken } = require("./middleWare/authTokenMiddleWare");
 const { getChatBeta } = require('./providers/nova/soChat');
 
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 3000;
 
 
 const app = express();
