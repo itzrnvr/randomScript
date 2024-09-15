@@ -1,10 +1,12 @@
 const axios = require('axios');
 const { json } = require('express');
+const { Logger } = require('../../utils/logUtils.js');
+const { getNewUserBeta } = require('./soProfileGen.js');
 const getNewUser = require('./profileGen.js').getNewUser
 
 async function getChatBeta(req, res) {
     const messages = req.body.messages
-    const userID = await getNewUser()
+    const userID = await getNewUserBeta()
 
     let jsonData = {
         messages: messages,
@@ -79,7 +81,7 @@ async function getChatBeta(req, res) {
 
     let data = JSON.stringify(jsonData)
 
-    console.log(data)
+   // console.log(data)
 
     let config = {
     method: 'post',
@@ -104,7 +106,7 @@ async function getChatBeta(req, res) {
 
     if(!req.body.stream){
         const response = await axios.request(config)
-        console.log(response.data)
+        //console.log(response.data)
         res.send(response.data)
         return 
     }
@@ -117,7 +119,28 @@ async function getChatBeta(req, res) {
         res.setHeader('Cache-Control', 'no-cache'); // recommend not to cache this response
         res.flushHeaders(); // flush the headers to ensure they are sent 
 
+        let modelLogged = false;
+
         response.data.on('data', chunk => {
+            const chunkStr = chunk.toString();
+            const lines = chunkStr.split('\n');
+            
+            lines.forEach(line => {
+                if (line.startsWith('data: ')) {
+                    try {
+                        const jsonStr = line.slice(6).trim();
+                        if (jsonStr !== '[DONE]') {
+                            const jsonData = JSON.parse(jsonStr);
+                            if (!modelLogged && jsonData.model) {
+                                Logger.model(jsonData.model)
+                                modelLogged = true;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error parsing JSON:', error);
+                    }
+                }
+            });
             res.write(chunk);
         })
 
@@ -130,34 +153,5 @@ async function getChatBeta(req, res) {
         res.end();
     })
 }
-
-async function executeChatTests() {
-    let promises = [];
-    const start = Date.now();
-  
-    // Launch 20 parallel requests
-    for(let i = 0; i < 1; i++){
-      promises.push(getChat());
-    }
-  
-    Promise.all(promises)
-      .then((values) => {
-        const end = Date.now();
-        const timeTakenMs = end - start;
-  
-        // Print each response
-        values.forEach((val, i) => {
-          console.log(`Response ${i}: ${val}`);
-        });
-  
-        // Print time taken
-        console.log(`Time taken for 20 requests: ${timeTakenMs}ms`);
-      })
-      .catch((error) => {
-        console.error(`Error during parallel requests execution: ${error}`);
-      });
-  }
-  
-//   executeChatTests();
 
 module.exports = {getChatBeta}

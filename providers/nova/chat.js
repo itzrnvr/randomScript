@@ -1,10 +1,11 @@
 const axios = require('axios');
 const { json } = require('express');
+const { getNewUserBeta } = require('./soProfileGen.js');
 const getNewUser = require('./profileGen.js').getNewUser
 
 async function getChat(req, res) {
     const messages = req.body.messages
-    const userID = await getNewUser()
+    const userID = await getNewUserBeta()
 
     let jsonData = {
         model: [
