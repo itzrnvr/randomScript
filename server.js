@@ -14,6 +14,7 @@ const { getStreamChatChatz, getStreamChatSpeakMate } = require("./providers/spea
 const { getStreamChatSumit } = require("./providers/sumit/chat");
 const { getStreamChatNeedAI } = require("./providers/needai/chat");
 const { authenticateToken } = require("./middleWare/authTokenMiddleWare");
+const { getChatBeta } = require('./providers/nova/soChat');
 
 
 const app = express();
@@ -70,7 +71,7 @@ app.post('/api/v1/chat/completions', authenticateToken,  (req, res) => {
 })
 
 app.post('/api/v2/chat/completions', (req, res) => {
-  getHelloChat(req, res)
+  getChatBeta(req, res)
 })
 
 app.post('/api/v3/chat/completions', (req, res) => {
@@ -109,6 +110,6 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(8080, () => {
+server.listen(3000, () => {
   console.log('Server is listening on port 3000');
 });
