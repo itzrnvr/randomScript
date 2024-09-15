@@ -16,6 +16,8 @@ const { getStreamChatNeedAI } = require("./providers/needai/chat");
 const { authenticateToken } = require("./middleWare/authTokenMiddleWare");
 const { getChatBeta } = require('./providers/nova/soChat');
 
+const port = process.env.PORT || 8080;
+
 
 const app = express();
 const server = http.createServer(app);
@@ -110,6 +112,6 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(8080, () => {
-  console.log('Server is listening on port 3000');
+server.listen(port, () => {
+  console.log(`Server is listening on port ${port}`);
 });
