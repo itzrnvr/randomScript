@@ -5,7 +5,7 @@ const getNewUser = require('./profileGen.js').getNewUser
 
 async function getChat(req, res) {
     const messages = req.body.messages
-    const userID = await getNewUserBeta()
+    const userID = await getNewUser()
 
     let jsonData = {
         model: [
