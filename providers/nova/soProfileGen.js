@@ -125,6 +125,11 @@ const fetchNewUser = async () => {
     return Profile.id;
 }
 
+// getNewUserBeta().then(id => {
+//     console.log("User ID:", id);
+// })
+
+
 
 module.exports = {getNewUserBeta}
 
